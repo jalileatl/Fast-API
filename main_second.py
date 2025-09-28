@@ -127,36 +127,50 @@ def create_patient(patient: Patient):
     return JSONResponse(status_code=201, content={"message": "Patient created successfully"})
 
 
-@app.put("edit/{patient_id}")
-
+@app.put("/edit/{patient_id}")
 def update_patient(patient_id: str, patient_update: PatientUpdate):
-
-    data=load_data()
+    data = load_data()
 
     if patient_id not in data:
         raise HTTPException(status_code=404, detail="patient not found")
-    
-    existing_patient_info=data[patient_id]
 
-    updated_patient_info=patient_update.model_dump(exclude_onset=True)
+    existing_patient_info = data[patient_id]
 
+    # Only update fields provided by user
+    updated_patient_info = patient_update.model_dump(exclude_unset=True)
     for key, value in updated_patient_info.items():
+        existing_patient_info[key] = value
 
-        existing_patient_info[key]=value
+    # Ensure ID stays consistent
+    existing_patient_info["id"] = patient_id
 
-    existing_patient_info[id]=patient_id
+    # Validate with Pydantic model
+    patient_pydantic_obj = Patient(**existing_patient_info)
+
+    # Convert back to dict (excluding "id")
+    existing_patient_info = patient_pydantic_obj.model_dump(exclude={"id"})
+
+    # Save back
+    data[patient_id] = existing_patient_info
+    save_data(data)
+
+    return JSONResponse(
+        status_code=200,
+        content={"message": "patient info updated successfully"}
+    )
 
 
-    patient_pydantic_obj=Patient(**existing_patient_info)
+@app.delete("/delete/{patient_id}")
 
+def delete_patient(patient_id: str):
 
+    data= load_data()
 
-        #existing_patient_info -> pydantic object -> updated bmi+verdict
-        #pydantic object -> dict
-
-    existing_patient_info=patient_pydantic_obj.model_dump(exclude='id')
-
-    data[patient_id]=existing_patient_info
+    if patient_id not in data:
+        raise HTTPException (status_code=404, detail="patient not found")
+    
+    del data[patient_id]
 
     save_data(data)
- 
+
+    return JSONResponse (status_code=200, content ={"message": "patient deleted successfully"})
