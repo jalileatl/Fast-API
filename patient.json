@@ -1,0 +1,13 @@
+{
+    "P006": {
+        "id": "P006",
+        "name": "Abdul Jalil",
+        "city": "NewYork",
+        "age": 27,
+        "gender": "male",
+        "height": 1.67,
+        "weight": 55.0,
+        "bmi": 19.72,
+        "verdict": "normal_weight"
+    }
+}
